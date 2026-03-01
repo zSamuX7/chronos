@@ -1,6 +1,7 @@
 * {
 	overscroll-behavior: none;
 }
+
 :root {
 	--accent-color: #5865F2; 
 	--accent-hover: #4752C4;
