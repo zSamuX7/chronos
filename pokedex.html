@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<link rel="stylesheet" href="pokedex.css">
+	<link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+	<title>Pokémons - Chronos</title>
+</head>
+<body>
+	<header>
+	<h1>Pokémons</h1>
+	<p>Visualize todos os pokémons disponiveis para captura no sistema do Chronos</p1>
+	</header>
+
+	<div class="container">
+		<div class="controls">
+			<button class="filter-btn" onclick="filterGen(1, 151)">Gen 1</button>
+			<button class="filter-btn" onclick="filterGen(152, 251)">Gen 2</button>
+			<button class="filter-btn" onclick="filterGen(252, 386)">Gen 3</button>
+			<button class="filter-btn" onclick="filterGen(387, 491)">Gen 4</button>
+			<button class="filter-btn" onclick="filterGen(1, 491)">Ver Todos</button>
+		</div>
+	<div class="pokedex-grid" id="pokedex">
+	</div>
+</div>
+
+<script>
+const pokedexContainer = document.getElementById('pokedex');
+
+let activeCard = null; // guarda qual card está animado
+
+async function fetchPokemon(start, end) {
+    pokedexContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color:white;">Carregando...</p>';
+    const pokemonList = [];
+
+    for (let i = start; i <= end; i++) {
+        const url = `https://pokeapi.co/api/v2/pokemon/${i}`;
+        pokemonList.push(fetch(url).then(res => res.json()));
+    }
+
+    const results = await Promise.all(pokemonList);
+    displayPokemon(results);
+}
+
+function displayPokemon(pokemons) {
+    pokedexContainer.innerHTML = pokemons.map(pokemon => {
+
+        const types = pokemon.types
+            .map(t => t.type.name)
+            .map(type => `<span class="type-badge ${type}">${type}</span>`)
+            .join('');
+
+        const normalSprite = pokemon.sprites.front_default;
+        const gifSprite = pokemon.sprites.versions["generation-v"]["black-white"].animated.front_default;
+
+        return `
+            <div class="pokemon-card"
+                 data-normal="${normalSprite}"
+                 data-gif="${gifSprite || normalSprite}">
+                 
+                <span class="pokemon-number">
+                    #${pokemon.id.toString().padStart(3, '0')}
+                </span>
+
+                <img src="${normalSprite}" 
+                     alt="${pokemon.name}" 
+                     class="pokemon-img">
+
+                <div class="pokemon-name">${pokemon.name}</div>
+                <div class="pokemon-types">
+                    ${types}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    document.querySelectorAll('.pokemon-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const img = card.querySelector('.pokemon-img');
+            const normal = card.dataset.normal;
+            const gif = card.dataset.gif;
+
+            // se já estiver ativo → volta pro normal
+            if (card === activeCard) {
+                img.src = normal;
+                activeCard = null;
+                return;
+            }
+
+            // reseta o anterior se existir
+            if (activeCard) {
+                const oldImg = activeCard.querySelector('.pokemon-img');
+                oldImg.src = activeCard.dataset.normal;
+            }
+
+            // ativa o atual
+            img.src = gif;
+            activeCard = card;
+        });
+
+    });
+}
+
+function filterGen(start, end) {
+    activeCard = null; // reseta qualquer pokemon ativo
+    fetchPokemon(start, end);
+}
+fetchPokemon(1, 151);
+</script>
+
+
+
+
+
+
+
+
+
+  <!-- BOTÃO FLUTUANTE -->
+  <div class="menu-btn" onclick="toggleMenu()">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+
+  <!-- OVERLAY -->
+  <div class="overlay" onclick="toggleMenu()"></div>
+
+  <!-- MENU -->
+  <nav class="sidebar">
+    <ul>
+      <li><a href="index.html">🏠 Início</a></li>
+      <li><a href="comandos.html">📜 Comandos</a></li>
+
+      <li><a href="pokedex.html">👾 Pokémons disponiveis</a></li>
+
+    </ul>
+  </nav>
+
+<script>
+function toggleMenu() {
+  document.querySelector(".sidebar").classList.toggle("active");
+  document.querySelector(".overlay").classList.toggle("active");
+  document.querySelector(".menu-btn").classList.toggle("active");
+  document.body.classList.toggle("no-scroll");
+}
+</script>
+</body>
+</html>
